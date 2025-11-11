@@ -9,7 +9,7 @@ service:
   targetPort: 3000
 
 env:
-  API_URL: "http://api-service:3001"
+  API_URL: "http://api-svc:3001"
 
 resources: {}
 

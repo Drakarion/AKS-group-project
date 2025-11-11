@@ -6,7 +6,7 @@ metadata:
 data:
   NODE_ENV: "production"
   # Нестрого секретные настройки БД
-  DB_HOST: "mysql-service.default.svc.cluster.local"     # или mysql-service.default.svc.cluster.local
+  DB_HOST: "mysql-service.default.svc.cluster.local"
   DB_NAME: "appdb"
   DB_PORT: "3306"
 ---

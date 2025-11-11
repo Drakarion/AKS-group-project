@@ -24,7 +24,7 @@ spec:
         - name: acr-auth
       containers:
         - name: api
-          image: elizadevopsacr.azurecr.io/api:v1
+          image: drakarionaksacr.azurecr.io/api:v1
           ports:
             - containerPort: 3000
           envFrom:
@@ -101,7 +101,7 @@ spec:
         - name: acr-auth
       containers:
         - name: web
-          image: elizadevopsacr.azurecr.io/web:v1
+          image: drakarionaksacr.azurecr.io/web:v1
           ports:
             - containerPort: 3000
           envFrom:
