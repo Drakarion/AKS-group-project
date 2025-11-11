@@ -10,21 +10,25 @@ terraform {
     }
   }
 }
+
 provider "kubernetes" {
   config_path = var.kubeconfig_path
 }
+
 provider "helm" {
   kubernetes {
     config_path = var.kubeconfig_path
   }
 }
+
 variable "kubeconfig_path" {
   type = string
 }
+
 resource "helm_release" "mysql" {
-  name       = "mysql"
-  chart      = "../charts/mysql"
-  namespace  = "default"
-  timeout    = 300
-  wait       = true
+  name      = "mysql"
+  chart     = "../charts/mysql"
+  namespace = "default"
+  timeout   = 300
+  wait      = true
 }

@@ -40,14 +40,14 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: 3000        # :white_check_mark: совпадает с containerPort
+              port: 3000        # ✅ совпадает с containerPort
             initialDelaySeconds: 15
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /health
-              port: 3000        # :white_check_mark: то же
+              port: 3000        # ✅ то же
             initialDelaySeconds: 30
             periodSeconds: 20
             failureThreshold: 6
@@ -58,12 +58,13 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+
 ---
 # ========== API SERVICE ==========
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-service        # :white_check_mark: имя для service discovery
+  name: api-service        # ✅ имя для service discovery
   labels:
     app: api
 spec:
@@ -74,6 +75,7 @@ spec:
       port: 3000
       targetPort: 3000
   type: ClusterIP          # внутри кластера, web ходит сюда
+
 ---
 # ========== WEB DEPLOYMENT ==========
 apiVersion: apps/v1
@@ -114,7 +116,7 @@ spec:
               value: "3000"
             - name: HOST
               value: "0.0.0.0"
-            - name: API_HOST         # :white_check_mark: говорим фронту, куда стучаться
+            - name: API_HOST         # ✅ говорим фронту, куда стучаться
               value: "http://api-service:3000"
           readinessProbe:
             httpGet:
@@ -137,6 +139,7 @@ spec:
             limits:
               cpu: "300m"
               memory: "256Mi"
+
 ---
 # ========== WEB SERVICE ==========
 apiVersion: v1
