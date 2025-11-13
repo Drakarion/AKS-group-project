@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   pull_request:
 
+permissions:
+  id-token: write      # <– ОБЯЗАТЕЛЬНО для azure/login с OIDC
+  contents: read
+
 # Глобальные переменные окружения — только простые строки
 env:
   ACR_NAME: drakarionaksacr
