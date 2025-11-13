@@ -1,56 +1,89 @@
 name: CI
+
 on:
   push:
     branches: [ main ]
   pull_request:
+
+# Глобальные переменные окружения — только простые строки
 env:
-  ACR_NAME: drakarionaksacr
-  ACR_LOGIN: drakarionaksacr.azurecr.io
-  WEB_IMAGE: ${{ env.ACR_LOGIN }}/web
-  API_IMAGE: ${{ env.ACR_LOGIN }}/api
+  ACR_NAME: elizadevopsacr
+  WEB_IMAGE: elizadevopsacr.azurecr.io/web
+  API_IMAGE: elizadevopsacr.azurecr.io/api
+
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      # Web: lint & tests
       - name: Web - lint & tests
         working-directory: n-web
         run: |
           npm ci
           npm run lint || true
           npm test || true
+
+      # API: lint & tests
       - name: API - lint & tests
         working-directory: n-api
         run: |
           npm ci
           npm run lint || true
           npm test || true
-      - name: Install tools (helm, terraform, yq)
+
+      # ✅ Terraform из официального setup-terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      # ✅ Helm через официальный setup-helm action
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      # ✅ yq через бинарник
+      - name: Install yq
         run: |
-          sudo snap install helm --classic
-          sudo snap install terraform --classic || true
-          sudo curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
+          sudo curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+            -o /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
+
+      # Helm & Terraform checks (с init -backend=false)
       - name: Helm & Terraform checks
         run: |
           helm lint charts/web || true
           helm lint charts/api || true
           helm lint charts/mysql || true
-          cd mysql-helm-tf && terraform fmt -check && terraform validate || true
-          cd ../app-helm-tf && terraform fmt -check && terraform validate || true
+
+          cd mysql-helm-tf
+          terraform init -backend=false
+          terraform fmt -check
+          terraform validate || true
+
+          cd ../app-helm-tf
+          terraform init -backend=false
+          terraform fmt -check
+          terraform validate || true
+
       - name: Azure login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: ACR login
         run: az acr login --name $ACR_NAME
+
       - name: Build & push images
         run: |
           IMAGE_TAG=${{ github.run_number }}
@@ -59,10 +92,13 @@ jobs:
           docker push $WEB_IMAGE:$IMAGE_TAG
           docker push $API_IMAGE:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Update GitOps values
         run: |
+          # IMAGE_TAG подхватится из $GITHUB_ENV
           yq -i ".image.tag = \"${IMAGE_TAG}\"" gitops/values/web-values.yaml
           yq -i ".image.tag = \"${IMAGE_TAG}\"" gitops/values/api-values.yaml
+
           git config user.email "github-actions@local"
           git config user.name "github-actions"
           git commit -am "Update images to tag ${IMAGE_TAG}" || echo "No changes"
