@@ -1,6 +1,6 @@
 image:
   repository: drakarionaksacr.azurecr.io/api
-  tag: "v1"                 # CI будет менять
+  tag: "v1"                 # CI/Jenkins будут менять
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
@@ -10,6 +10,6 @@ env:
   DB_HOST: "mysql"
   DB_NAME: "appdb"
   DB_USER: "appuser"
-# если чарт умеет работать с существующим секретом:
+# у тебя уже есть секрет api-secret → чарт должен уметь его использовать
 existingSecret: "api-secret"
 secret: {}

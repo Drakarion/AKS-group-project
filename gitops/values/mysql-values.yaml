@@ -1,15 +1,8 @@
-image:
-  repository: drakarionaksacr.azurecr.io/api
-  tag: "v1"                 # CI будет менять
-  pullPolicy: IfNotPresent
-service:
-  type: ClusterIP
-  port: 3001
-  targetPort: 3001
-env:
-  DB_HOST: "mysql"
-  DB_NAME: "appdb"
-  DB_USER: "appuser"
-# если чарт умеет работать с существующим секретом:
-existingSecret: "api-secret"
-secret: {}
+mysql:
+  database: "appdb"
+  user: "appuser"
+  password: "Kaizen123!"
+  rootPassword: "RootPass123!"
+storage:
+  size: "10Gi"
+  storageClassName: "default"
