@@ -7,9 +7,9 @@ on:
 
 # Глобальные переменные окружения — только простые строки
 env:
-  ACR_NAME: elizadevopsacr
-  WEB_IMAGE: elizadevopsacr.azurecr.io/web
-  API_IMAGE: elizadevopsacr.azurecr.io/api
+  ACR_NAME: drakarionaksacr
+  WEB_IMAGE: drakarionaksacr.azurecr.io/web
+  API_IMAGE: drakarionaksacr.azurecr.io/api
 
 jobs:
   build-test-push:
