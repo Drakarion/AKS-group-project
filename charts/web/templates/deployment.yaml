@@ -23,3 +23,5 @@ spec:
           env:
             - name: API_URL
               value: {{ .Values.env.API_URL | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
