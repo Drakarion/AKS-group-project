@@ -1,18 +1,14 @@
 image:
   repository: drakarionaksacr.azurecr.io/web
-  tag: v2
+  tag: "20"
   pullPolicy: IfNotPresent
-
 service:
   type: LoadBalancer
   port: 80
   targetPort: 3000
-
 env:
   API_URL: "http://api-svc:3001"
-
 resources: {}
-
 autoscaling:
   enabled: true
   minReplicas: 1
