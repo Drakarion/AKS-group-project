@@ -149,13 +149,21 @@ jobs:
         run: |
           echo "Using image tag from build-and-push job: ${IMAGE_TAG}"
 
-          # Обновляем теги образов в GitOps values
+          # обновляем теги
           yq -i ".image.tag = \"${IMAGE_TAG}\"" gitops/values/web-values.yaml
           yq -i ".image.tag = \"${IMAGE_TAG}\"" gitops/values/api-values.yaml
 
           git config user.email "github-actions@local"
           git config user.name "github-actions"
 
-          git status
-          git commit -am "Update images to tag ${IMAGE_TAG}" || echo "No changes"
-          git push
+          # подтягиваем последние изменения из origin/main
+          git pull --rebase origin main
+
+          # добавляем изменённые файлы
+          git add gitops/values/web-values.yaml gitops/values/api-values.yaml
+
+          # делаем коммит (если есть изменения)
+          git commit -m "Update images to tag ${IMAGE_TAG}" || echo "No changes"
+
+          # пушим
+          git push origin main
