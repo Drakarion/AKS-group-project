@@ -1,6 +1,6 @@
 image:
   repository: drakarionaksacr.azurecr.io/web
-  tag: "17" # CI/Jenkins будут менять
+  tag: "21" # CI/Jenkins будут менять
   pullPolicy: IfNotPresent
 service:
   type: LoadBalancer
