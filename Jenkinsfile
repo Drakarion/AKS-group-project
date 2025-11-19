@@ -1,16 +1,22 @@
 pipeline {
   agent any
+
   environment {
-    ACR_NAME    = 'drakarionaksacr'
-    ACR_LOGIN   = 'drakarionaksacr.azurecr.io'
-    WEB_IMAGE   = "${ACR_LOGIN}/web"
-    API_IMAGE   = "${ACR_LOGIN}/api"
-    IMAGE_TAG   = "${env.BUILD_NUMBER}"
+    ACR_NAME  = 'drakarionaksacr'
+    ACR_LOGIN = 'drakarionaksacr.azurecr.io'
+    WEB_IMAGE = "${ACR_LOGIN}/web"
+    API_IMAGE = "${ACR_LOGIN}/api"
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
   }
+
   stages {
+
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
+
     stage('Node tests (web & api)') {
       steps {
         dir('n-web') {
@@ -29,46 +35,83 @@ pipeline {
         }
       }
     }
+
     stage('Helm & Terraform checks') {
       steps {
         sh '''
-          helm lint charts/web || true
-          helm lint charts/api || true
+          # Helm lint
+          helm lint charts/web   || true
+          helm lint charts/api   || true
           helm lint charts/mysql || true
+
+          # ===== mysql-helm-tf =====
           cd mysql-helm-tf
+          terraform init -backend=false -input=false
           terraform fmt -check
           terraform validate || true
+
+          # ===== app-helm-tf =====
           cd ../app-helm-tf
+          terraform init -backend=false -input=false
           terraform fmt -check
           terraform validate || true
         '''
       }
     }
+
     stage('Docker build & push') {
       steps {
-        sh '''
-          az acr login --name ${ACR_NAME}
-          docker build -t ${WEB_IMAGE}:${IMAGE_TAG} ./n-web
-          docker build -t ${API_IMAGE}:${IMAGE_TAG} ./n-api
-          docker push ${WEB_IMAGE}:${IMAGE_TAG}
-          docker push ${API_IMAGE}:${IMAGE_TAG}
-        '''
+        withCredentials([
+          usernamePassword(
+            credentialsId: 'acr-elizadevopsacr',
+            usernameVariable: 'ACR_USER',
+            passwordVariable: 'ACR_PASS'
+          )
+        ]) {
+          sh '''
+            echo "$ACR_PASS" | docker login ${ACR_LOGIN} -u "$ACR_USER" --password-stdin
+
+            docker build -t ${WEB_IMAGE}:${IMAGE_TAG} ./n-web
+            docker build -t ${API_IMAGE}:${IMAGE_TAG} ./n-api
+
+            docker push ${WEB_IMAGE}:${IMAGE_TAG}
+            docker push ${API_IMAGE}:${IMAGE_TAG}
+
+            docker logout ${ACR_LOGIN} || true
+          '''
+        }
       }
     }
+
     stage('Update GitOps values (tags)') {
       steps {
-        sh '''
-          # IMAGE_TAG уже есть в env
-          sudo curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
-          sudo chmod +x /usr/local/bin/yq
-          yq -i ".image.tag = \\"${IMAGE_TAG}\\"" gitops/values/web-values.yaml
-          yq -i ".image.tag = \\"${IMAGE_TAG}\\"" gitops/values/api-values.yaml
-          git config user.email "jenkins@local"
-          git config user.name "jenkins-ci"
-          git commit -am "Update images to tag ${IMAGE_TAG}" || echo "No changes"
-          git push
-        '''
+        withCredentials([
+          usernamePassword(
+            credentialsId: 'github-elizadevops-token',
+            usernameVariable: 'GIT_USER',
+            passwordVariable: 'GIT_TOKEN'
+          )
+        ]) {
+          sh '''
+            git fetch origin
+            git checkout -B main origin/main
+
+            # Обновляем только values-файлы
+            yq -i ".image.tag = \\"${IMAGE_TAG}\\"" gitops/values/web-values.yaml
+            yq -i ".image.tag = \\"${IMAGE_TAG}\\"" gitops/values/api-values.yaml
+
+            git config user.email "jenkins@local"
+            git config user.name "jenkins-ci"
+
+            git add gitops/values/web-values.yaml gitops/values/api-values.yaml
+            git commit -m "Update images to tag ${IMAGE_TAG}" || echo "No changes to commit"
+
+            # Пуш с токеном
+            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/elizadevops/aks-project.git main
+          '''
+        }
       }
     }
-  }
-}
+
+  } // <-- конец блока stages
+}   // <-- конец pipeline
