@@ -63,7 +63,7 @@ pipeline {
       steps {
         withCredentials([
           usernamePassword(
-            credentialsId: 'acr-elizadevopsacr',
+            credentialsId: 'acr-drakarionaksacr',
             usernameVariable: 'ACR_USER',
             passwordVariable: 'ACR_PASS'
           )
@@ -87,7 +87,7 @@ pipeline {
       steps {
         withCredentials([
           usernamePassword(
-            credentialsId: 'github-elizadevops-token',
+            credentialsId: 'github-drakarion-token',
             usernameVariable: 'GIT_USER',
             passwordVariable: 'GIT_TOKEN'
           )
@@ -107,7 +107,7 @@ pipeline {
             git commit -m "Update images to tag ${IMAGE_TAG}" || echo "No changes to commit"
 
             # Пуш с токеном
-            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/elizadevops/aks-project.git main
+            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Drakarion/AKS-group-project.git main
           '''
         }
       }
