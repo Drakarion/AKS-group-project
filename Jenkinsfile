@@ -36,6 +36,23 @@ pipeline {
       }
     }
 
+    stage('npm audit (security check)') {
+      steps {
+        dir('n-web') {
+          sh '''
+            echo "Running npm audit for n-web..."
+            npm audit --audit-level=high || true
+          '''
+        }
+        dir('n-api') {
+          sh '''
+            echo "Running npm audit for n-api..."
+            npm audit --audit-level=high || true
+          '''
+        }
+      }
+    }
+
     stage('Helm & Terraform checks') {
       steps {
         sh '''
