@@ -93,7 +93,7 @@ pipeline {
               echo "Running SonarCloud analysis..."
               "${scannerHome}/bin/sonar-scanner" \
                 -Dsonar.projectKey=aks-project \
-                -Dsonar.organization=Drakarion \
+                -Dsonar.organization=drakarion \
                 -Dsonar.sources=. \
                 -Dsonar.exclusions=**/node_modules/**,**/charts/**,**/mysql-helm-tf/**,**/app-helm-tf/**,**/gitops/**
             """
