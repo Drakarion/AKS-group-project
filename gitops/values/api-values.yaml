@@ -1,6 +1,6 @@
 image:
   repository: drakarionaksacr.azurecr.io/api
-  tag: "5" # CI/Jenkins будут менять
+  tag: "28" # CI/Jenkins будут менять
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
