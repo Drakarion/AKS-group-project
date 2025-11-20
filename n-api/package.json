@@ -3,7 +3,9 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "node ./bin/www"
+        "start": "node ./bin/www",
+        "lint": "echo \"No lint configured yet\" && exit 0",
+        "test": "echo \"No tests configured yet\" && exit 0"
     },
     "dependencies": {
         "express": "^4.21.2",
