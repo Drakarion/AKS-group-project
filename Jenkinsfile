@@ -100,6 +100,42 @@ pipeline {
       }
     }
 
+    stage('Smoke test API container') {
+      steps {
+        sh '''
+          echo "Starting API smoke test with image: ${API_IMAGE}:${IMAGE_TAG}"
+
+          # Запускаем контейнер с API
+          docker run -d --rm \
+            --name api-smoke-test \
+            -p 3000:3000 \
+            ${API_IMAGE}:${IMAGE_TAG}
+
+          echo "Waiting API to start..."
+          sleep 15
+
+          echo "Checking API health endpoint..."
+
+          # 1-я попытка: /health
+          if curl -f http://localhost:3000/health; then
+            echo "API healthcheck /health OK"
+          # 2-я попытка: корень /
+          elif curl -f http://localhost:3000/; then
+            echo "API healthcheck / OK"
+          else
+            echo "API smoke test FAILED"
+            echo "=== API container logs ==="
+            docker logs api-smoke-test || true
+            docker stop api-smoke-test || true
+            exit 1
+          fi
+
+          echo "Stopping API test container..."
+          docker stop api-smoke-test || true
+        '''
+      }
+    }
+
     stage('Update GitOps values (tags)') {
       steps {
         withCredentials([
