@@ -7,6 +7,9 @@ pipeline {
     WEB_IMAGE = "${ACR_LOGIN}/web"
     API_IMAGE = "${ACR_LOGIN}/api"
     IMAGE_TAG = "${env.BUILD_NUMBER}"
+
+    // SonarCloud token из Credentials (Secret text, ID = sonarcloud-token)
+    SONAR_TOKEN = credentials('sonarcloud-token')
   }
 
   stages {
@@ -73,6 +76,29 @@ pipeline {
           terraform fmt -check
           terraform validate || true
         '''
+      }
+    }
+
+    stage('SonarCloud Analysis') {
+      environment {
+        SONAR_SCANNER_OPTS = '-Xmx512m'
+      }
+      steps {
+        withSonarQubeEnv('sonarcloud') {
+          script {
+            // имя сканера должно совпадать с Global Tool Configuration
+            def scannerHome = tool 'sonarscanner'
+
+            sh """
+              echo "Running SonarCloud analysis..."
+              "${scannerHome}/bin/sonar-scanner" \
+                -Dsonar.projectKey=aks-project \
+                -Dsonar.organization=elizadevops \
+                -Dsonar.sources=. \
+                -Dsonar.exclusions=**/node_modules/**,**/charts/**,**/mysql-helm-tf/**,**/app-helm-tf/**,**/gitops/**
+            """
+          }
+        }
       }
     }
 
