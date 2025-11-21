@@ -56,6 +56,27 @@ pipeline {
       }
     }
 
+    // Trivy: файловый скан (репозиторий, зависимости, конфиги)
+    stage('Trivy FS scan') {
+      steps {
+        sh '''
+          echo "Running Trivy filesystem scan (HIGH,CRITICAL)..."
+          # Скан всего репозитория. --exit-code 0 чтобы не падал pipeline, но находил уязвимости.
+          trivy fs --severity HIGH,CRITICAL --exit-code 0 .
+        '''
+      }
+    }
+
+    // Trivy: IaC config scan (Terraform + Helm + K8s)
+    stage('Trivy IaC config scan') {
+      steps {
+        sh '''
+          echo "Running Trivy IaC config scan (Terraform + Helm + K8s)..."
+          trivy config --severity HIGH,CRITICAL --exit-code 0 .
+        '''
+      }
+    }
+
     stage('Helm & Terraform checks') {
       steps {
         sh '''
